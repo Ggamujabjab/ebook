@@ -373,6 +373,7 @@ Viewer.prototype.gnbMenu = function(value){
 					)
 			).prependTo( this.$head );
 
+		// 다중압축파일 메뉴
 		var $cateLayer = titleCategory.find("#js_book_title")
 		, $cateLayerList = $cateLayer.find(".list")
 		, $cateLayerListLi = $cateLayerList.find("li")
@@ -431,7 +432,7 @@ Viewer.prototype.gnbMenu = function(value){
 					}
 				}
 			}
-		} else {
+		} else { // 폴더 리스트가 없을경우
 			$titleLayerList.hide();
 			$titleLayerNodata.show();
 		}
@@ -461,7 +462,7 @@ Viewer.prototype.gnbMenu = function(value){
 			$(".title_menu").removeClass("title_folder");
 		}
 
-		// 타이틀 레이어 활성화일경우
+		// 타이틀 레이어 활성화일경우(초기화)
 		if( $title.hasClass("title_active") ){
 			$title.removeClass("title_active");
 			$title.find("img").remove();
@@ -469,6 +470,7 @@ Viewer.prototype.gnbMenu = function(value){
 				$("<img />").attr({ src : "image/ebook_listView_off.png" })
 			)
 		}
+
 		// 타이틀명
 		$title.parent().addClass("title_folder");
 		$title.find("a span").text(value.title);
@@ -492,7 +494,7 @@ Viewer.prototype.gnbMenu = function(value){
 					}
 				}
 			}
-		} else {
+		} else { // 폴더가 없을경우
 			$titleLayerList.hide();
 			$titleLayer.find(".no_data").show();
 		}
