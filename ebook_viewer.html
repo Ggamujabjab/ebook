@@ -12,7 +12,205 @@
 </head>
 <body>
 
-	이북 시작
+<!-- 이미지 뷰어 -->
+<div id="viewer" class="viewer">
+
+	<!-- Head -->
+	<div id="head_line">
+		<div id="head_explain">
+			<!-- 압축 폴더별 타이틀 -->
+			<div class="title_menu">
+				<p class="title">
+					<a href="#js_book_number">
+						<span></span>
+					</a>
+					<span class="title_arrow"><img src="image/ebook_listView_off.png" alt="" /></span>
+				</p>
+				<!-- 만화 회 레이어 -->
+				<div id="js_book_number" class="book_number">
+					<div class="book_number_in">
+						<ul class="list">
+
+						</ul>
+						<!-- 목록이 없을때 -->
+						<p class="no_data">목록이 없습니다.</p>
+					</div>
+				</div>
+				<!-- //만화 회 레이어 -->
+			</div>
+			<!--/div-->
+			<!-- //압축 폴더별 타이틀 -->
+
+			<!-- 상단 버튼 영역 -->
+			<p class="button">
+				<a href="#" class="btn_full"><img src="image/ebook_ico_full_off.png" alt="FULL" /></a>
+				<a href="#" class="btn_bookmark"><img src="image/ebook_ico_bookmark_off.png" alt="책갈피" /></a>
+				<a href="#" class="btn_landscapeView"><img src="image/ebook_ico_view_on.png" alt="세로뷰" /></a>
+				<a href="#js_setting_wrap" class="btn_viewerSettings"><img src="image/ebook_ico_viewerSettings.png" alt="뷰어설정" /></a>
+			</p>
+			<!-- //상단 버튼 영역 -->
+
+			<!-- 설정창 -->
+			<div id="js_setting_wrap" class="setting_wrap">
+				<div class="setting_wrap_in">
+					<p class="stt_title"><img src="image/ebook_title_flipSetting.gif" alt="자동넘김 설정" /></p>
+					<ul class="stt_list js_auto_input">
+						<li class="left">
+							<input type="radio" id="cnt_setupSd1" name="cnt_setupSd" class="input-radio" value="0">
+							<label for="cnt_setupSd1">설정안함</label>
+						</li>
+						<li class="right">
+							<input type="radio" id="cnt_setupSd2" name="cnt_setupSd" class="input-radio" value="3">
+							<label for="cnt_setupSd2">3초</label>
+						</li>
+						<li class="left">
+							<input type="radio" id="cnt_setupSd3" name="cnt_setupSd" class="input-radio" value="7">
+							<label for="cnt_setupSd3">7초</label>
+						</li>
+						<li class="right">
+							<input type="radio" id="cnt_setupSd4" name="cnt_setupSd" class="input-radio" value="14">
+							<label for="cnt_setupSd4">14초</label>
+						</li>
+					</ul>
+					<p class="stt_title">
+						<img src="image/ebook_title_flipOrder.gif" alt="페이지 넘김순서 * 역순보기는 1장 보기에만 적용됩니다." />
+						<a href="#" id="js_guideLayer" class="button"><img src="image/ebook_btn_guide.gif" alt="역순보기 안내"></a>
+					</p>
+					<ul class="stt_list js_order_input">
+						<li class="left">
+							<input type="radio" id="cnt_setupOd1" name="cnt_setupOd_align" class="input-radio">
+							<label for="cnt_setupOd1">기본설정</label>
+						</li>
+						<li class="right">
+							<input type="radio" id="cnt_setupOd2" name="cnt_setupOd_align" class="input-radio">
+							<label for="cnt_setupOd2">역순보기</label>
+						</li>
+					</ul>
+					<ul class="stt_list stt_list_none js_view_input">
+						<li class="left">
+							<input type="radio" id="cnt_setupView1" name="cnt_setupView" class="input-radio">
+							<label for="cnt_setupView1">1장 보기</label>
+						</li>
+						<li class="right">
+							<input type="radio" id="cnt_setupView2" name="cnt_setupView" class="input-radio">
+							<label for="cnt_setupView2">2장 보기</label>
+						</li>
+					</ul>
+					<p class="stt_title"><img src="image/ebook_title_setBackgroundColor.gif" alt="배경색 설정" /></p>
+					<ul class="bgcolor_selc js_bgcolor_selc">
+						<li class="btn_white"><a href="#"><img src="image/ebook_btn_white_off.gif" alt="흰색" /></a></li>
+						<li class="btn_gray"><a href="#"><img src="image/ebook_btn_gray_off.gif" alt="회색" /></a></li>
+						<li class="btn_black"><a href="#"><img src="image/ebook_btn_black_off.gif" alt="검정" /></a></li>
+					</ul>
+					<p class="stt_title"><img src="image/ebook_title_shortcutKeyGuide.gif" alt="단축키 안내" /></p>
+					<p class="shortcuts_img"><img src="image/ebook_img_shortcuts.gif" alt="" /></p>
+				</div>
+			</div>
+			<!-- //설정창 -->
+		</div>
+	</div>
+	<!-- //Head -->
+
+	<!-- 책갈피 -->
+	<p class="photo_bookmark"><img src="image/ebook_ico_bookmark_big.png" alt="책갈피" /></p>
+	<!-- //책갈피 -->
+
+	<!-- Content -->
+	<div class="viewer_container">
+		<div id="content_visual" class="content_wrap">
+			<div class="content_wrap_in">
+
+			</div>
+		</div>
+		<a href="#" id="js_all_button" class="content_button"></a>
+	</div>
+	<!-- //Content -->
+
+	<!-- 페이징 -->
+	<p class="photo_paging"></p>
+	<!-- //페이징 -->
+
+	<!-- menu -->
+	<div id="viewer_menu">
+		<div class="viewer_menu_in">
+			<div class="paging_counting">
+				<div class="paging_counting_in">
+					<div class="ui-slider">
+						<input type="text" class="input-range ui-slider-input" name="slider" value="1" min="0" max="100" data-highlight="true" />
+						<div id="slider-range-min" class="ui-slider-track ui-shadow-inset ui-bar-inherit ui-corner-all"></div>
+					</div>
+					<p class="input_paging"></p>
+				</div>
+			</div>
+			<a href="#" class="btn_previous"><img src="image/ebook_ico_previous.png" alt="이전 회" /></a>
+			<a href="#" class="btn_nextTime"><img src="image/ebook_ico_nextTime.png" alt="다음 회" /></a>
+		</div>
+	</div>
+	<!-- //menu -->
+
+	<!-- 이미지 마지막 페이지 -->
+	<div class="viewer_last_page">
+		<div class="viewer_last_page_in viewer_nextview_true">
+			<p class="msg">마지막 페이지입니다.<br>다음회로 이동하시겠습니까?</p>
+			<p class="button">
+				<a href="#" class="btn_confirm">확인</a>
+				<a href="#" class="btn_cancel">취소</a>
+			</p>
+		</div>
+		<div class="viewer_last_page_in viewer_nextview_false">
+			<p class="msg">마지막 페이지 입니다.<br>다음회가 없습니다.</p>
+			<p class="button">
+				<a href="#" class="btn_cancel btn_cel_confirm">확인</a>
+			</p>
+		</div>
+		<div class="viewer_last_page_in viewer_direct_true">
+			<p class="msg"><span class="moveMsg">다음</span>회로 이동하시겠습니까?</p>
+			<p class="button">
+				<a href="#" class="btn_confirm">확인</a>
+				<a href="#" class="btn_cancel">취소</a>
+			</p>
+		</div>
+		<div class="viewer_last_page_in viewer_direct_false">
+			<p class="msg"><span class="moveMsg">다음</span>회가 없습니다.</p>
+			<p class="button">
+				<a href="#" class="btn_cancel btn_cel_confirm">확인</a>
+			</p>
+		</div>
+	</div>
+	<!-- //이미지 마지막 페이지 -->
+
+	<!-- 로딩바 -->
+	<div id="loading" class="loading_bar">
+	    <img src="image/loading_bar1.png" alt="">
+	    <img src="image/loading_bar2.png" alt="">
+	    <img src="image/loading_bar3.png" alt="">
+	    <img src="image/loading_bar4.png" alt="">
+	    <img src="image/loading_bar5.png" alt="">
+	    <img src="image/loading_bar6.png" alt="">
+	    <img src="image/loading_bar7.png" alt="">
+	    <img src="image/loading_bar8.png" alt="">
+	    <img src="image/loading_bar9.png" alt="">
+	    <img src="image/loading_bar10.png" alt="">
+	    <img src="image/loading_bar11.png" alt="">
+	    <img src="image/loading_bar12.png" alt="">
+	    <img src="image/loading_bar13.png" alt="">
+	    <img src="image/loading_bar14.png" alt="">
+	    <img src="image/loading_bar15.png" alt="">
+	    <img src="image/loading_bar16.png" alt="">
+	    <img src="image/loading_bar17.png" alt="">
+	    <img src="image/loading_bar18.png" alt="">
+	</div>
+	<div id="loading_bg" class="loading_bar_bg"></div><!-- 로딩바 배경 -->
+	<!-- //로딩바 -->
+</div>
+<!-- 이미지 뷰어 -->
+
+<!-- 안내 가이드 레이어 -->
+<div id="js-layer-guide" class="layer_guide">
+	<img class="guide_img" src="image/ebook_layer_guide.png" alt="">
+	<p class="btn_close"><a href="#"><img src="image/ebook_layer_guide_button.png" alt=""></a></p>
+</div>
+<!-- //안내 가이드 레이어 -->
 
 </body>
 </html>
