@@ -212,5 +212,116 @@
 </div>
 <!-- //안내 가이드 레이어 -->
 
+<script type="text/javascript">
+// Ebook 뷰어 데이터 객체
+var comicData = {
+	"code" : "SUCCESS",
+	"userid" : "jk9804034",
+	"app_version" : "",
+	"title" : "세상에서 가장 이쁜 사진",
+	"cate" : "CTN",
+	"bookmark" : "",
+	"folder_name" : "세상에서 가장 이쁜 사진",
+	"contents_name" : "완결★ 최강의 종족이 인간이었던 건 1~7권[번역] 완",
+	"auto_pass" : "0",
+	"page_no" : "0",
+	"pass_way" : "1",
+	"pass_division" : "1",
+	"adjust" : "W",
+	"background" : "G",
+	"prev_link" : "",
+	"next_link" : "/API/ebook/filelist.php?idx=86565785&type=web&folder_name=%C3%D6%B0%AD%C0%C7+%C1%BE%C1%B7%C0%CC+%C0%CE%B0%A3%C0%CC%BE%FA%B4%F8+%B0%C7+10-55%C8%AD",
+	"file_list" : [
+		"image/filelist/img1.jpg",
+		"image/filelist/img2.jpg",
+		"image/filelist/img3.jpg",
+		"image/filelist/img4.jpg",
+		"image/filelist/img5.jpg",
+		"image/filelist/img6.jpg",
+		"image/filelist/img7.jpg",
+		"image/filelist/img8.jpg",
+		"image/filelist/img9.jpg",
+		"image/filelist/img10.jpg",
+		"image/filelist/img11.jpg",
+		"image/filelist/img12.jpg",
+		"image/filelist/img13.jpg",
+		"image/filelist/img14.jpg",
+		"image/filelist/img15.jpg",
+		"image/filelist/img16.jpg",
+		"image/filelist/img17.jpg",
+		"image/filelist/img18.jpg",
+		"image/filelist/img19.jpg",
+		"image/filelist/img20.jpg",
+		"image/filelist/img21.jpg",
+		"image/filelist/img22.jpg",
+		"image/filelist/img23.jpg",
+		"image/filelist/img24.jpg",
+		"image/filelist/img25.jpg",
+		"image/filelist/img26.jpg",
+		"image/filelist/img27.jpg",
+		"image/filelist/img28.jpg",
+		"image/filelist/img29.jpg",
+		"image/filelist/img30.jpg",
+	],
+	"folder_list" : [
+		{
+			"title" : "세상에서 가장 이쁜 사진1",
+			"link" : "/API/ebook/filelist.php?idx=86565785&type=web&folder_name=%C3%D6%B0%AD%C0%C7+%C1%BE%C1%B7%C0%CC+%C0%CE%B0%A3%C0%CC%BE%FA%B4%F8+%B0%C7+01-9%C8%AD"
+		},
+		{
+			"title" : "세상에서 가장 이쁜 사진2",
+			"link" : "/API/ebook/filelist.php?idx=86565785&type=web&folder_name=%C3%D6%B0%AD%C0%C7+%C1%BE%C1%B7%C0%CC+%C0%CE%B0%A3%C0%CC%BE%FA%B4%F8+%B0%C7+10-55%C8%AD"
+		},
+		{
+			"title" : "세상에서 가장 이쁜 사진3",
+			"link" : "/API/ebook/filelist.php?idx=86565785&type=web&folder_name=%C3%D6%B0%AD%C0%C7+%C1%BE%C1%B7%C0%CC+%C0%CE%B0%A3%C0%CC%BE%FA%B4%F8+%B0%C7+56-62%C8%AD%2C"
+		},
+		{
+			"title" : "세상에서 가장 이쁜 사진4",
+			"link" : "/API/ebook/filelist.php?idx=86565785&type=web&folder_name=%C3%D6%B0%AD%C0%C7+%C1%BE%C1%B7%C0%CC+%C0%CE%B0%A3%C0%CC%BE%FA%B4%F8+%B0%C7+63%C8%AD"
+		}
+	],
+	"contents_list" : [
+		{
+			"title" : "완결★ 최강의 종족이 인간이었던 건 1~7권[번역] 완",
+			"link" : "/API/ebook/filelist.php?idx=86565785&type=web&hash=df37c7bfccc636fba505fa8f44fee006_314655429"
+		}
+	]
+};
+
+// Ebook 뷰어 스크립트
+function Viewer(op){
+	this.$container = op.node; // 전체 영역
+	this.$head = this.$container.find("#head_explain"); // 상단 메뉴
+	this.$bookmark = this.$container.find(".photo_bookmark"); // 북마크
+	this.$content = this.$container.find("#content_visual"); // 리스트 영역
+	this.$paging = this.$container.find(".photo_paging"); // 리스트 페이징
+	this.$menu = this.$container.find("#viewer_menu"); // 하단 페이징
+	this.$screenWidth = ( navigator.userAgent.toLowerCase().indexOf(".net4.0c") != -1 ) ? 1006 : 1000; // 초기 가로사이즈
+	this.$screenHeight = ( navigator.userAgent.toLowerCase().indexOf(".net4.0c") != -1 ) ? 808 : 800; // 초기 세로사이즈
+	this.$realImgWidth = null; // 이미지 원본 가로사이즈
+	this.$realImgHeight = null; // 이미지 원본 세로사이즈
+	this.$initImgWidth = null; // 초기 리사이즈 가로사이즈
+	this.$initImgHeight = null; // 초기 리사이즈 세로사이즈
+	this.$imgForms = null; // 이미지 형식
+	this.$imgWidth = null; // 이미지 가로 사이즈
+	this.$imgHeight = null; // 이미지 세로 사이즈
+	this.$timer = null; // 시간 타이머
+	this.$loadingTimer = null; // 로딩 시간 타이머
+	this.$popupSize = false; // 전체화면 여부
+	this.$length = null; // 회차별 이미지 총 갯수
+	this.$course = "next"; // 방향
+	this.clearInterFlag = null; // 전체 사이즈 지정 여부
+
+	// 화면을 만들어 내기위한 데이터 객체
+	this.dataList = op.data;
+}
+// Ebook 뷰어 스크립트
+var viewer = new Viewer({
+	node : $("#viewer"),
+	data : comicData
+});
+</script>
+
 </body>
 </html>
