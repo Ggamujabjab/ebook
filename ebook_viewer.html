@@ -313,8 +313,196 @@ function Viewer(op){
 	this.$course = "next"; // 방향
 	this.clearInterFlag = null; // 전체 사이즈 지정 여부
 
+	// 이미지 총 갯수 저장
+	this.$length = op.data.file_list.length;
+
 	// 화면을 만들어 내기위한 데이터 객체
-	this.dataList = op.data;
+	this.dataList = op.data;	
+
+	// 초기 데이터 로드
+	this.dataLoad();
+}
+// 데이터 로드
+Viewer.prototype.dataLoad = function(){
+	// 초기 실행
+	this.gnbMenu( this.dataList );
+}
+// 셀렉트 메뉴
+Viewer.prototype.gnbMenu = function(value){
+	// 다중 압축 파일이 있을경우
+	if( value.contents_list && value.contents_list.length > 1 ){
+		if( this.$head.find(".title_menu").hasClass(".title_category") ){
+			this.$head.find(".title_menu").remove();
+		}
+		if( $("#js_book_number .list li").length ){
+			$("#js_book_number .list li").remove();
+		}
+		// 기존에 존재한 타이틀영역에 클래스 추가
+		this.$head.find(".title_menu").addClass("title_folder");
+
+		// 다중압축파일 타이틀영역 생성
+		var titleCategory = $("<div></div>").addClass("title_menu title_category")
+			.append(
+				$("<p></p>").addClass("title")
+					.append(
+						$("<a></a>", { href : "#js_book_title", title : value.contents_name })
+							.append(
+								$("<span></span>").text(value.contents_name)
+							)
+					)
+					.append(
+						$("<span></span>").addClass("title_arrow")
+							.append(
+								$("<img />", { src : "image/ebook_listView_off.png" })
+							)
+					)
+			)
+			.append(
+				$("<span></span>").addClass("title_line")
+			)
+			.append(
+				$("<div></div>", { id : "js_book_title" }).addClass("book_number")
+					.append(
+						$("<div></div>").addClass("book_number_in")
+							.append(
+								$("<ul></ul>").addClass("list")
+							)
+							.append(
+								$("<p></p>").addClass("no_data").text("목록이 없습니다.")
+							)
+					)
+			).prependTo( this.$head );
+
+		var $cateLayer = titleCategory.find("#js_book_title")
+		, $cateLayerList = $cateLayer.find(".list")
+		, $cateLayerListLi = $cateLayerList.find("li")
+		, $cateLayerNodata = $cateLayer.find(".no_data");
+
+		// 다중압축 리스트 추가
+		$cateLayerList.show();
+		$cateLayerNodata.hide();
+
+		// 제목레이어의 목록이 없을경우
+		if( !$cateLayerListLi.length ){
+			// 리스트 생성
+			for( var i=0; i<value.contents_list.length; i++ ){
+				$("<li />").append(
+					$("<a />").attr({ href : "#", title : value.contents_list[i].title }).text( value.contents_list[i].title )
+				).appendTo( $cateLayerList );
+
+				// 마지막 리스트에 클래스 추가
+				if( i == value.contents_list.length-1 ){
+					$cateLayerList.find("li").eq(i).addClass("last-child");
+				}
+			}
+		}
+
+		// 폴더레이어
+		var $titleMenu = this.$head.find(".title_menu")
+		, $titleFolder = this.$head.find(".title_folder")
+		, $titleList = $("<div></div>").addClass("title_list")
+			.append( $titleMenu )
+			.appendTo( this.$head );
+
+		// 폴더별
+		var $titleListValue = $titleFolder.find(".title a span")
+		, $titleListLayer = $titleFolder.find(".book_number")
+		, $titleLayerList = $titleListLayer.find(".list")
+		, $titleLayerListLi = $titleLayerList.find("li")
+		, $titleLayerNodata = $titleListLayer.find(".no_data")
+		, $settingBtn = $(".btn_viewerSettings")
+		, $settingLayer = $("#js_setting_wrap");
+
+		// 폴더 타이틀 적용
+		$titleListValue.text(value.title);
+		// 폴더 리스트 추가
+		if( value.folder_list.length > 1 ){
+			$titleLayerList.show();
+			$titleLayerNodata.hide();
+
+			if( !$titleLayerListLi.length ){
+				for( var i=0; i<value.folder_list.length; i++ ){
+					$("<li />").append(
+						$("<a />").attr({ href : "#", title : value.folder_list[i].title }).text( value.folder_list[i].title )
+					).appendTo( $titleLayerList );
+
+					if( i == value.folder_list.length-1 ){
+						$titleLayerList.find("li").eq(i).addClass("last-child");
+					}
+				}
+			}
+		} else {
+			$titleLayerList.hide();
+			$titleLayerNodata.show();
+		}
+
+		// 폴더리스트 레이어 닫기(초기)
+		for( var j=0, max=$titleMenu.find(".book_number").length; j<max; j++ ){
+			if( $titleMenu.find(".book_number").eq(j).css("display") != "none" ){
+				$titleMenu.find(".book_number").eq(j).parent().find(".title a").trigger("click");
+			}
+		}
+
+		// 설정 레이어 닫기(초기)
+		if( $settingLayer.css("display") != "none" ){
+			$settingBtn.trigger("click");
+		}
+	} else {
+		// 타이틀 생성
+		var $title = this.$head.find(".title")
+		, $titleLayer = this.$head.find("#js_book_number")
+		, $titleLayerList = $titleLayer.find(".list");
+
+		// 초기화후 다중압축이 없을경우 해당 타이틀 삭제
+		if( $(".title_category").length ){
+			$(".title_category").remove();
+			$titleLayerList.find("li").remove();
+
+			$(".title_menu").removeClass("title_folder");
+		}
+
+		// 타이틀 레이어 활성화일경우
+		if( $title.hasClass("title_active") ){
+			$title.removeClass("title_active");
+			$title.find("img").remove();
+			$title.find(".title_arrow").append(
+				$("<img />").attr({ src : "image/ebook_listView_off.png" })
+			)
+		}
+		// 타이틀명
+		$title.parent().addClass("title_folder");
+		$title.find("a span").text(value.title);
+		// 레이어 숨김
+		$titleLayer.hide();
+		// 폴더가 1개 이상일경우
+		if( value.folder_list.length > 1 ){
+			$titleLayerList.show();
+			// 빈값 레이어 내용 숨김
+			$titleLayer.find(".no_data").hide();
+			// 제목레이어의 목록이 없을경우
+			if( !$titleLayerList.find("li").length ){
+				for( var i=0; i<value.folder_list.length; i++ ){
+					$("<li />").append(
+						$("<a />").attr("href", "#").text( value.folder_list[i].title )
+					).appendTo( $titleLayerList );
+
+					// 마지막 리스트에 클래스 추가
+					if( i == value.folder_list.length-1 ){
+						$titleLayerList.find("li").eq(i).addClass("last-child");
+					}
+				}
+			}
+		} else {
+			$titleLayerList.hide();
+			$titleLayer.find(".no_data").show();
+		}
+	}
+
+	// 마우스포인트의 안내 메세지 레이어 생성(리셋을 위해 한번만 실행을 위해 조건문 추가)
+	var $mouseLayerValue = $(".viewer_mouse_text");
+	if( !$mouseLayerValue.length ){
+		$("<div />").addClass("viewer_mouse_text").appendTo( this.$container );
+	}
 }
 // Ebook 뷰어 스크립트
 var viewer = new Viewer({
