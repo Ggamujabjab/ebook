@@ -505,6 +505,15 @@ Viewer.prototype.gnbMenu = function(value){
 	if( !$mouseLayerValue.length ){
 		$("<div />").addClass("viewer_mouse_text").appendTo( this.$container );
 	}
+
+	// 이미지가 유형이 있고 이미지가 10개 이상일경우
+	if( this.$imgForms && this.$length > 10  ){
+		// 데이터 저장
+		this.dataOverwrite({ imgForm : this.$imgForms });
+	} else { // 이미지 유형을 찾지못한경우
+		// 이미지 유형 체크
+		this.dataImgShape();
+	}
 }
 // 이미지 태그 생성
 Viewer.prototype.imgPreload = function(src){
@@ -518,6 +527,76 @@ Viewer.prototype.imgPreload = function(src){
 		}
 
 		return image;
+	}
+}
+// 이미지 유형 추출
+Viewer.prototype.dataImgShape = function(op){
+	var that = this
+	, resetValue = ( op && op.value ) ? op.value : "initial"
+	, resetImgForm = null
+	, totalCount = 0
+	, widthCount = 0
+	, heightCount = 0;
+
+	// 이미지형식(갸로형 또는 세로형) 체크를 위해 리스트 중간에 5장의 이미지 선별
+	if( this.dataList.file_list.length < 5 ){
+		for( var i=0; i<this.dataList.file_list.length; i++ ){
+			// 전체 이미지 이미지 선택
+			var preImage = this.imgPreload(this.dataList.file_list[i]);
+
+			$(preImage).appendTo("body");
+
+			// 이미지 로드
+			preloadImg(preImage, this.dataList.file_list.length);
+		}
+	} else {
+		for(var j=0; j<5; j++){
+			// 전체 이미지에서 5장의 이미지 선택
+			var preImage = this.imgPreload(this.dataList.file_list[Math.floor(this.dataList.file_list.length/5) + j]);
+
+			$(preImage).appendTo("body");
+
+			// 이미지 로드
+			preloadImg(preImage, 5);
+		}
+	}
+
+	// 이미지 로드
+	function preloadImg(img, size){
+		$(img).load(function(){
+			var imgSizeLength = size;
+
+			// 이미지 유형 체크값
+			if( $(this).outerWidth() < $(this).outerHeight() ){
+				heightCount++;
+			} else {
+				widthCount++;
+			}
+
+			// 총갯수 증가
+			totalCount++;
+
+			// 이미지 로드 마지막 체크
+			if( totalCount === imgSizeLength ){
+				// 유형 체크
+				if( widthCount > heightCount ){
+					resetImgForm = "horizontal"; // 가로형
+				} else {
+					resetImgForm = "vertical"; // 세로형
+				}
+
+				// 이미지 실제 사이즈
+				that.$realImgWidth = $(this).outerWidth();
+				that.$realImgHeight = $(this).outerHeight();
+
+				// 데이터 저장(이미지형)
+				that.dataOverwrite({ imgForm : resetImgForm }); // 이미지형 저장
+				that.$imgForms = that.dataList.imgForm;
+			}
+
+			// 이미지 삭제(이미지형을 체크하기 위한 이미지이기 때문에 삭제)
+			$(this).remove();
+		});
 	}
 }
 // 옵션별 결과값 추출
