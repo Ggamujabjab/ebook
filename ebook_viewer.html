@@ -324,6 +324,9 @@ function Viewer(op){
 }
 // 데이터 로드
 Viewer.prototype.dataLoad = function(){
+	// 로딩실행
+	this.loadingBar({ active : "show" });
+
 	// 초기 실행
 	this.gnbMenu( this.dataList );
 }
@@ -792,6 +795,9 @@ Viewer.prototype.createImgLoad = function(op){
 						// 추출된 이미지 사이즈 초기값으로 저장
 						that.$initImgWidth = that.$imgWidth;
 						that.$initImgHeight = that.$imgHeight;
+
+						// 로딩실행
+						that.loadingBar({ active : "hide" });
 					}
 				}, 50)
 
@@ -818,6 +824,50 @@ Viewer.prototype.createImgLoad = function(op){
 	} else { // 하나씩 생성될경우
 		if( typeof op.order != "string" ){
 			createImgReturn(op.order);
+		}
+	}
+}
+// 로딩바
+Viewer.prototype.loadingBar = function(op){
+	var $loading = $("#loading")
+	, $loadingImg = $loading.find("img")
+	, $loadingBg = $("#loading_bg")
+	, count = 0;
+
+	// 로딩바 활성화
+	if( op.active === "show" ){
+		if( $loading.length ){
+			$loadingImg.hide();
+			$loadingImg.eq(count).show();
+
+			// 로딩바 중앙정렬
+			$loading.css({ left : $(window).width()/2 - $loading.outerWidth()/2, top : $(window).height()/2 - $loading.outerHeight()/2 }).show();
+			// 로딩바 배경 활성화
+			$loadingBg.css({ opacity : 0.1 }).show();
+
+			// 로딩바 움직임
+			this.$loadingTimer = setInterval(function(){
+				// 로딩이미지 숨김
+				$loadingImg.hide();
+
+				// Count 변수 적용
+				if( count < $loadingImg.length-1 ){
+					count++;
+				} else {
+					count = 0;
+				}
+
+				// 로딩이미지 활성화
+				$loadingImg.eq(count).show();
+			}, 50);
+		}
+	} else { // 로딩바 비활성화
+		if( $loading.length ){
+			$loading.hide();
+			$loadingBg.hide();
+
+			// 로딩바이미지 멈춤
+			if( this.$loadingTimer ) clearInterval(this.$loadingTimer);
 		}
 	}
 }
