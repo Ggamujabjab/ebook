@@ -510,6 +510,8 @@ Viewer.prototype.gnbMenu = function(value){
 	if( this.$imgForms && this.$length > 10  ){
 		// 데이터 저장
 		this.dataOverwrite({ imgForm : this.$imgForms });
+		// 리스트 생성
+		this.shapeAfterAction({ course : this.dataList.imgForm, data : this.dataList });
 	} else { // 이미지 유형을 찾지못한경우
 		// 이미지 유형 체크
 		this.dataImgShape();
@@ -596,7 +598,227 @@ Viewer.prototype.dataImgShape = function(op){
 
 			// 이미지 삭제(이미지형을 체크하기 위한 이미지이기 때문에 삭제)
 			$(this).remove();
+
+			// 리스트 생성
+			if( resetImgForm ){
+				that.shapeAfterAction({ course : resetImgForm, data : that.dataList, order : resetValue });
+			}
 		});
+	}
+}
+// 리스트 생성
+Viewer.prototype.shapeAfterAction = function(op){
+	var that = this
+	, $bookmark = this.$head.find(".btn_bookmark") // 북마크 버튼
+	, $direction = this.$head.find(".btn_landscapeView") // 가로, 세로형 버튼
+	, couseValue = null // 방향 설정
+	, fileLength = null; // 파일리스트 체크
+
+	// 리스트 생성 조건
+	if( op.course === "horizontal" ){
+		couseValue = "horizontal";
+
+		if( this.optResult({ opt : "division" }) === 1 ){
+			fileLength = this.dataList.file_list.length*2;
+		} else {
+			fileLength = this.dataList.file_list.length;
+		}
+	} else {
+		couseValue = "vertical";
+
+		if( this.optResult({ opt : "division" }) === 1 ){
+			fileLength = this.dataList.file_list.length;
+		} else {
+			fileLength = this.dataList.file_list.length/2;
+		}
+	}
+
+	// 리스트 생성
+	for( var i=0; i<fileLength; i++ ){
+		// 세로형
+		if( couseValue === "vertical" ){
+			// 한장보기
+			if( this.optResult({ opt : "division" }) === 1 ){
+				$("<div />").addClass("slide")
+					.append(
+						$("<span />").addClass("slide_view")
+					).prependTo( this.$content.find(".content_wrap_in") );
+			} else { // 두장보기
+				currentList = $("<div />").addClass("slide").prependTo( this.$content.find(".content_wrap_in") );
+
+				for( var j=0; j<this.optResult({ opt : "division" }); j++ ){
+					$("<span />").addClass("slide_view").appendTo( currentList );
+				}
+			}
+		} else { // 가로형
+			// 한장보기
+			if( this.optResult({ opt : "division" }) === 1 ){
+				if( i%2 === 0 ){
+					$("<div />").addClass("slide")
+						.append(
+							$("<span />").addClass(this.optResult({ opt : "course" }) === 1 ? "slide_view slide_even" : "slide_view slide_odd")
+						).appendTo( this.$content.find(".content_wrap_in") );
+				} else {
+					$("<div />").addClass("slide")
+						.append(
+							$("<span />").addClass(this.optResult({ opt : "course" }) === 1 ? "slide_view slide_odd" : "slide_view slide_even")
+						).appendTo( this.$content.find(".content_wrap_in") );
+				}
+			} else { // 두장보기
+				currentList = $("<div />").addClass("slide slide_double").prependTo( this.$content.find(".content_wrap_in") );
+
+				for( var k=0; k<this.optResult({ opt : "division" }); k++ ){
+					if( k%2 === 0 ){
+						$("<span />").addClass("slide_view slide_even").appendTo( currentList );
+					} else {
+						$("<span />").addClass("slide_view slide_odd").appendTo( currentList );
+					}
+				}
+			}
+		}
+	}
+
+	// 전체 리스트 생성
+	this.$contentList = this.$content.find(".slide");
+
+	// 이미지 로드
+	if( this.optResult({ opt : "bookmark" }) > 0 ){
+		// 데이터 오버라이딩
+		this.dataOverwrite({ page_no : this.optResult({ opt : "bookmark" }) });
+
+		// 이미지 로드
+		this.createImgLoad({ data : this.dataList, order : "passNo" });
+	} else {
+		// 이미지 로드
+		this.createImgLoad({ data : this.dataList, order : "initial" });
+	}
+}
+// 이미지 생성
+Viewer.prototype.createImgLoad = function(op){
+	var that = this
+	, bookmark = null
+	, passNo = null
+	, way = this.optResult({ opt : "course" })
+	, division = this.optResult({ opt : "division" })
+	, flag = false
+	, allFlag = false
+	, fileList = null
+	, fileListActiveCount = null;
+
+	// 북마크 및 현재 페이지번호 생성
+	if( op.data.bookmark != "" ){
+		if( division == 1 ){
+			bookmark = this.optResult({ opt : "bookmark" });
+			passNo = this.optResult({ opt : "bookmark" });
+		} else {
+			bookmark = Math.floor(this.optResult({ opt : "bookmark" })/2);
+			passNo = Math.floor(this.optResult({ opt : "bookmark" })/2);
+		}
+	} else {
+		bookmark = 0;
+		passNo = 0;
+	}
+
+	// 이미지 형식에 따라 이미지 생성
+	var createImgReturn = function(value){
+		// 세로형
+		if( op.data.imgForm === "vertical" ){
+			// 한장보기
+			if( division === 1 ){
+				// 정방향
+				if( way === 1 ){
+					fileList = $(that.imgPreload(op.data.file_list[value])).addClass("img").appendTo( that.$contentList.eq(value).find("span") );
+				} else { // 역방향
+					if( value % 2 === 0 ){
+						fileListActiveCount = op.data.file_list[value + 1];
+					} else {
+						fileListActiveCount = op.data.file_list[value - 1];
+					}
+
+					fileList = $(that.imgPreload(fileListActiveCount)).addClass("img").appendTo( that.$contentList.eq(value).find("span") );
+				}
+			} else { // 두장보기
+				var count = (value * 2);
+
+				for( var k=count; k<=count+1; k++){
+					if( !that.$contentList.eq(value).find("span").eq(k%2).find("img").length ){
+						if( way == 1 ){
+							if( that.$contentList.eq(value).hasClass("slide_full_double") ){ // 전체화면
+								fileList = $(that.imgPreload(op.data.file_list[k])).addClass("img").appendTo( that.$contentList.eq(value).find("span").eq(k%2) );
+							} else { // 기본 화면
+								fileList = $(that.imgPreload(op.data.file_list[k])).addClass("img").appendTo( that.$contentList.eq(value).addClass("slide_double").find("span").eq(k%2) );
+							}
+						} else {
+							if( that.$contentList.eq(value).hasClass("slide_full_double") ){
+								if( k % 2 != 0 ){
+									fileList = $(that.imgPreload(op.data.file_list[k - 1])).addClass("img").appendTo( that.$contentList.eq(value).find("span").eq(k%2) );
+								} else {
+									fileList = $(that.imgPreload(op.data.file_list[k + 1])).addClass("img").appendTo( that.$contentList.eq(value).find("span").eq(k%2) );
+								}
+							} else {
+								if( k % 2 != 0 ){
+									fileList = $(that.imgPreload(op.data.file_list[k - 1])).addClass("img").appendTo( that.$contentList.eq(value).addClass("slide_double").find("span").eq(k%2) );
+								} else {
+									fileList = $(that.imgPreload(op.data.file_list[k + 1])).addClass("img").appendTo( that.$contentList.eq(value).addClass("slide_double").find("span").eq(k%2) );
+								}
+							}
+						}
+					}
+				}
+			}
+		} else { // 가로형
+			// 한장보기
+			if( division === 1 ){
+				fileList = $(that.imgPreload(op.data.file_list[Math.floor(value/2)])).addClass("img").appendTo( that.$contentList.eq(value).find("span") );
+			} else { // 두장보기
+				if( that.$contentList.eq(value).find("span img").length ){
+					that.$contentList.eq(value).find("span img").remove();
+				}
+
+				fileList = $(that.imgPreload(op.data.file_list[value])).addClass("img").appendTo( that.$contentList.eq(value).find("span") );
+			}
+		}
+
+		// 이미지 로드
+		fileList.load(function(v, i){
+			if( !flag && typeof op.order !== "number" ){
+				var timers = setInterval(function(){
+					if( !that.$imgHeight ){
+						that.optResult({ opt : "size", size : that.$contentList.eq(passNo).find("span img") });
+					} else {
+						// 타이머 정지
+						clearInterval(timers);
+
+						// 추출된 이미지 사이즈 초기값으로 저장
+						that.$initImgWidth = that.$imgWidth;
+						that.$initImgHeight = that.$imgHeight;
+					}
+				}, 50)
+
+				flag = true;
+			}
+		})
+	}
+
+	// 초기 실행
+	if( op.order == "initial" ){
+		for( var i=bookmark-1; i<=bookmark+1; i++){
+			if( i >= 0 ){
+				createImgReturn(i);
+			}
+		}
+	} else if( op.order == "passNo" ) { // 북마크로 인해 처음이 아닌경우
+		for( var j=passNo-1; j<=passNo+1; j++){
+			if( !that.$contentList.eq(( op.data.page_way == 1 ) ? j : (op.data.file_list.length-1)-j).find("img").length ){
+				if( j >= 0 && j < that.$contentList.length ){
+					createImgReturn(j);
+				}
+			}
+		}
+	} else { // 하나씩 생성될경우
+		if( typeof op.order != "string" ){
+			createImgReturn(op.order);
+		}
 	}
 }
 // 옵션별 결과값 추출
