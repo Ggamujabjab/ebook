@@ -506,6 +506,20 @@ Viewer.prototype.gnbMenu = function(value){
 		$("<div />").addClass("viewer_mouse_text").appendTo( this.$container );
 	}
 }
+// 이미지 태그 생성
+Viewer.prototype.imgPreload = function(src){
+	var image;
+
+	if( src ){
+		image = new window.Image();
+
+		if( src ){
+			image.src = src;
+		}
+
+		return image;
+	}
+}
 // Ebook 뷰어 스크립트
 var viewer = new Viewer({
 	node : $("#viewer"),
