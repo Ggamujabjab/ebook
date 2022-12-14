@@ -520,6 +520,82 @@ Viewer.prototype.imgPreload = function(src){
 		return image;
 	}
 }
+// 옵션별 결과값 추출
+Viewer.prototype.optResult = function(op){
+	var totalResult = null;
+
+	switch( op.opt ){
+		case "total" : // 전체리스트
+			totalResult = this.$content.find(".slide");
+
+			break;
+		case "length" : // 이미지 갯수
+			if( this.dataList.imgForm === "vertical" ){
+				if( Number(this.dataList.pass_division) === 1 ){
+					totalResult = this.dataList.file_list.length;
+				} else {
+					totalResult = Math.floor(this.dataList.file_list.length/2);
+				}
+			} else {
+				if( Number(this.dataList.pass_division) === 1 ){
+					totalResult = this.dataList.file_list.length*2;
+				} else {
+					totalResult = this.dataList.file_list.length-1;
+				}
+			}
+
+			break;
+		case "bookmark" : // 책갈피
+			if( this.dataList.bookmark ){
+				totalResult = Number(this.dataList.bookmark);
+			} else {
+				totalResult = "";
+			}
+
+			break;
+		case "adjust" : // 가로, 세로뷰
+			if( this.dataList.adjust === "W" ){
+				totalResult = true;
+			} else {
+				totalResult = false;
+			}
+
+			break;
+		case "auto" : // 자동넘김
+			totalResult = Number(this.dataList.auto_pass);
+
+			break;
+		case "course" : // 넘김순서
+			totalResult = Number(this.dataList.pass_way);
+		
+			break;
+		case "division" : // 한장, 두장보기
+			totalResult = Number(this.dataList.pass_division);
+
+			break;
+		case "back" : // 배경색
+			totalResult = this.dataList.background;
+
+			break;
+		case "size" : // 이미지 사이즈
+			this.$imgWidth = op.size.outerWidth();
+			this.$imgHeight = op.size.outerHeight();
+
+			break;
+		case "pageNo" : // 현재 페이지
+			totalResult = Number(this.dataList.page_no);
+
+			break;
+	}
+
+	return totalResult;
+}
+// 입력 데이터 오버레이
+Viewer.prototype.dataOverwrite = function(data){
+	var saveData = $.extend({}, this.dataList, data);
+
+	this.dataList = saveData;
+}
 // Ebook 뷰어 스크립트
 var viewer = new Viewer({
 	node : $("#viewer"),
