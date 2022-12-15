@@ -784,6 +784,9 @@ Viewer.prototype.createImgLoad = function(op){
 
 		// 이미지 로드
 		fileList.load(function(v, i){
+			// 이미지 리사이즈
+			that.imgPieceResize({ img : $(this) });
+			
 			if( !flag && typeof op.order !== "number" ){
 				var timers = setInterval(function(){
 					if( !that.$imgHeight ){
@@ -822,6 +825,9 @@ Viewer.prototype.createImgLoad = function(op){
 
 						// 전체 이미지 사이즈 지정
 						that.imgAllResize({ order : "init" });
+
+						// 페이지 노출
+						that.$paging.show();
 					}
 				}, 50)
 
@@ -2329,6 +2335,180 @@ Viewer.prototype.imgPieceResize = function(op){
 			}
 		});
 	}
+}
+// 자동넘김 시간타이머
+Viewer.prototype.autoPageTimer = function(op){
+	var that = this
+	, index = (op && op.time ) ? op.time : this.optResult({ opt : "auto" })
+	, timer = null;
+
+	// 설정안함
+	if( index == 0 ){
+		// 타이머 설정 리셋
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+	} else { // 시간 선택
+		timer = setInterval(function(){
+			// 가로뷰
+			if( that.optResult({ opt : "adjust" }) ){
+				that.progressMotion({ course : "next" });
+			} else { // 세로뷰
+				that.progressMotion({ node : that.$content.find(".content_wrap_in"), course : "down" });
+			}
+		}, index * 1000);
+
+		// 타이머 저장
+		that.$timer = timer;
+	}
+}
+// 이전, 다음 메세지 출력
+Viewer.prototype.layerAlertMsg = function(op){
+	var that = this
+	, result = ( op && op.result ) ? op.result : null
+	, $layerMsg = $(".viewer_last_page")
+	, $lastMove = $layerMsg.find(".viewer_nextview_true") // 마지막페이지 이동
+	, $lastCancel = $layerMsg.find(".viewer_nextview_false") // 마지막페이지 더이상 없음
+	, $nextMove = $layerMsg.find(".viewer_direct_true") // 마지막페이지 더이상 없음
+	, $nextCancel = $layerMsg.find(".viewer_direct_false") // 마지막페이지 더이상 없음
+	, $confirm = $layerMsg.find(".btn_confirm") // 확인버튼
+	, $cancel = $layerMsg.find(".btn_cancel"); // 취소버튼
+
+	// 이전화
+	if( result === "prev" ){
+		// 이전화가 없을경우
+		if( this.dataList.prev_link == "" ){
+			$nextCancel.find(".moveMsg").text("이전");
+
+			if( $layerMsg.css("display") === "none" ) $nextCancel.show();
+		} else { // 이전화가 있을경우
+			$nextMove.find(".moveMsg").text("이전");
+
+			if( $layerMsg.css("display") === "none" ) $nextMove.show();
+		}
+
+		if( $layerMsg.css("display") === "none" ){
+			$layerMsg.stop(false).fadeIn();
+		}
+	} else if( result === "next" ){ // 다음화
+		if( this.dataList.next_link == "" ){
+			$nextCancel.find(".moveMsg").text("다음");
+
+			if( $layerMsg.css("display") === "none" ){
+				$nextCancel.show();
+			}
+		} else {
+			$nextMove.find(".moveMsg").text("다음");
+
+			if( $layerMsg.css("display") === "none" ){
+				$nextMove.show();
+			}
+		}
+
+		if( $layerMsg.css("display") === "none" ){
+			$layerMsg.stop(false).fadeIn();
+		}
+	} else if( result == "last" ){ // 마지막
+		if( this.dataList.next_link == "" ){
+			if( $layerMsg.css("display") == "none" ){
+				$lastCancel.show();
+			}
+		} else {
+			if( $layerMsg.css("display") == "none" ){
+				$lastMove.show();
+			}
+		}
+
+		if( $layerMsg.css("display") == "none" ){
+			$layerMsg.stop(false).fadeIn();
+		}
+	}
+
+	// 확인(이동)
+	$confirm.unbind().bind("click", function(){
+		// 이전 링크
+		if( result === "prev" ){
+			// 리셋(데이터 재로드)
+			that.initReset({ url : that.dataList.prev_link });
+		} else { // 다음링크
+			// 리셋(데이터 재로드)
+			that.initReset({ url : that.dataList.next_link });
+		}
+
+		// 레이어 숨김
+		$layerMsg.hide()
+		$layerMsg.find(".viewer_last_page_in").hide();
+
+		return false;
+	});
+
+	// 취소
+	$cancel.unbind().bind("click", function(){
+		$layerMsg.stop().fadeOut(function(){
+			$(this).find(".viewer_last_page_in").hide();
+		});
+
+		return false;
+	});
+}
+// 하단 이미지별 페이징 생성
+Viewer.prototype.pagingCount = function(op){
+	var optValue = op.active
+	, active = null
+	, length = null;
+
+	// 한장보기
+	if( this.optResult({ opt : "division" }) === 1 ){
+		// 페이징이 없을경우 생성
+		if( !this.$paging.find("span").length ){
+			this.$paging.append( $("<span />").addClass("pagination-current").text(optValue) );
+		} else { // 페이징이 있을경우 텍스트 입력
+			this.$paging.find(".pagination-current").text(optValue);
+		}
+	} else { // 2장보기
+		active = optValue * 2;
+		length = ( this.dataList.imgForm === "vertical" ) ? this.$length : parseFloat(this.$length)*2;
+
+		// 페이징이 없을경우 생성
+		if( !this.$paging.find("span").length ){
+			// 정방향 페이징 좌우
+			if( this.optResult({ opt : "course" }) === 1 ){
+				this.$paging
+					.append( $("<span />").addClass("pagination-prev").text(active - 1) )
+					.append( $("<span />").addClass("pagination-next").text(active) )
+			} else { // 역방향 페이징 좌우
+				this.$paging
+					.append( $("<span />").addClass("pagination-prev").text(active) )
+					.append( $("<span />").addClass("pagination-next").text(active - 1) )
+			}
+		} else { // 페이징이 있을경우
+			if( this.optResult({ opt : "course" }) === 1 ){ // 정방향
+				if( active > length ){
+					this.$paging.find(".pagination-prev").text(active-1);
+					this.$paging.find(".pagination-next").hide();
+				} else {
+					this.$paging.find(".pagination-prev").text(active-1);
+					this.$paging.find(".pagination-next").show().text(active);
+				}
+			} else { // 역방향
+				if( active > length ){
+					this.$paging.find(".pagination-prev").hide();
+					this.$paging.find(".pagination-next").text(active-1);
+				} else {
+					this.$paging.find(".pagination-prev").show().text(active);
+					this.$paging.find(".pagination-next").text(active-1);
+				}
+			}
+		}
+	}
+}
+// 초기화 실행
+Viewer.prototype.initReset = function(op){
+	// 리스트 삭제
+	this.$contentList.remove();
+
+	// 데이터로드
+	this.dataLoad(op.url);
 }
 // 로딩바
 Viewer.prototype.loadingBar = function(op){
