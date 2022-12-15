@@ -798,6 +798,9 @@ Viewer.prototype.createImgLoad = function(op){
 
 						// 로딩실행
 						that.loadingBar({ active : "hide" });
+
+						// 상단 메뉴 이벤트
+						that.menuCreateEvent();
 					}
 				}, 50)
 
@@ -824,6 +827,711 @@ Viewer.prototype.createImgLoad = function(op){
 	} else { // 하나씩 생성될경우
 		if( typeof op.order != "string" ){
 			createImgReturn(op.order);
+		}
+	}
+}
+// 메뉴 이벤트 생성
+Viewer.prototype.menuCreateEvent = function(){
+	var that = this
+	, $titleMenu = this.$head.find(".title a") // 타이틀
+	, $titleCategory = this.$head.find(".title_category .title a") // 타이틀
+	, $titleFolder = this.$head.find(".title_folder .title a") // 타이틀
+	, $titleLayer = this.$head.find(".book_number") // 타이틀 레이어
+	, $titleLayerLink = $titleLayer.find("a") // 타이틀 레이어 링크
+	, $titleContentLink = this.$head.find("#js_book_title a") // 컨텐츠 레이어 링크
+	, $titleFolderLink = this.$head.find("#js_book_number a") // 폴더 레이어 링크
+	, $btnContentMenu = this.$container.find("#js_all_button") // 전체영역 클릭
+	, $btnFullMenu = this.$head.find(".btn_full") // full 버튼
+	, $btnMarkMenu = this.$head.find(".btn_bookmark") // 북마크 버튼
+	, $btnDirectMenu = this.$head.find(".btn_landscapeView") // 가로 및 세로 버튼
+	, $btnSetupMenu = this.$head.find(".btn_viewerSettings") // 뷰어설정 버튼
+	, $setupLayer = this.$head.find(".setting_wrap") // 뷰어 설정 레이어
+	, $checkAutoStart = $setupLayer.find(".js_auto_input .input-radio") // 자동넘김 설정(input)
+	, $checkPageOrder = $setupLayer.find(".js_order_input .input-radio") // 페이지 넘김 순서(input)
+	, $checkViewCount = $setupLayer.find(".js_view_input .input-radio") // 페이지 이미지 노출 갯수(input)
+	, $btnBackColor = $setupLayer.find(".js_bgcolor_selc a") // 배경색 설정 버튼
+	, $btnPrev = this.$menu.find(".btn_previous") // 이전회 버튼
+	, $btnNext = this.$menu.find(".btn_nextTime") // 다음회 버튼
+	, $inputRange = this.$menu.find(".input-range") // 페이지 inut
+	//, $inputParent = this.$menu.find(".ui-slider-bg") // 페이지 활성화
+	//, $inputIcon = this.$menu.find(".ui-slider-handle") // 페이지 아이콘
+	, $stateLayer = $(".viewer_mouse_text") // 마우스 포인트 레이어(이전, 메뉴, 다음)
+	, menuActive = true // 상하단 컨트롤러 활성화 여부
+	, inputFocus = null
+	, slider = null
+	, inputValue = null;
+
+	// 상단메뉴 마우스오버
+	this.$head.parent().bind("mouseenter", function(){
+		// 마우스 포인터 레이어 숨김
+		$stateLayer.hide();
+	});
+	// 하단메뉴 마우스오버
+	this.$menu.bind("mouseenter", function(){
+		// 마우스 포인터 레이어 숨김
+		$stateLayer.hide();
+	});
+
+	// 전체영역 클릭
+	$btnContentMenu.unbind().bind("click", function(e){
+		var posX = e.pageX; // 마우스 X 좌표
+
+		if( posX < Math.floor( $(window).width()/3 ) ){ // 좌측영역
+			// 정방향 또는 역방향 버튼 위치 변경
+			if( that.optResult({ opt : "course" }) === 1 ){
+				// 진행 모션
+				that.progressMotion({ course : "prev" });
+			} else {
+				// 진행 모션
+				that.progressMotion({ course : "next" });
+			}
+
+			if( menuActive ){
+				if( $titleMenu.parent().hasClass("title_active") || $btnSetupMenu.hasClass("btn_viewerSettings_active") ){
+					// 기능 레이어 숨김
+					that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+				}
+
+				// 기능컨트럴 레이어 활성화
+				that.controllToggle(false);
+
+				menuActive = false;
+			}
+		} else if( posX >= Math.floor( $(window).width()/3 ) && posX < Math.floor( $(window).width()/3 )*2 ) { // 중앙영역
+			if( menuActive ){
+				// 기능컨트럴 레이어 활성화
+				that.controllToggle(false);
+
+				// 기능 레이어 숨김
+				that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+
+				menuActive = false;
+			} else {
+				// 기능컨트럴 레이어 활성화
+				that.controllToggle(true);
+
+				menuActive = true;
+			}
+		} else { // 우측영역
+			// 정방향 또는 역방향 버튼 위치 변경
+			if( that.optResult({ opt : "course" }) === 1 ){
+				// 진행 모션
+				that.progressMotion({ course : "next" });
+			} else {
+				// 진행 모션
+				that.progressMotion({ course : "prev" });
+			}
+
+			if( menuActive ){
+				if( $titleMenu.parent().hasClass("title_active") || $btnSetupMenu.hasClass("btn_viewerSettings_active") ){
+					// 기능 레이어 숨김
+					that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+				}
+
+				// 기능컨트럴 레이어 활성화
+				that.controllToggle(false);
+
+				menuActive = false;
+			}
+		}
+	});
+	// 전체영역 마우스무브
+	$btnContentMenu.bind("mousemove", function(e){
+		var posX = e.pageX
+		, posY = e.pageY;
+
+		// 마우스포인트 레이어 위치
+		mousePos({ psX : posX, psY : posY });
+	});
+
+	// 전체영역 클릭
+	this.$content.unbind().bind("click", function(e){
+		var posX = e.pageX;
+
+		if( menuActive ){
+			// 기능컨트럴 레이어 활성화
+			that.controllToggle(false);
+
+			// 기능 레이어 숨김
+			that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+
+			menuActive = false;
+		} else {
+			// 기능컨트럴 레이어 활성화
+			that.controllToggle(true);
+
+			menuActive = true;
+		}
+	});
+	// 전체영역 마우스무브
+	this.$content.bind("mousemove", function(e){
+		var posX = e.pageX
+		, posY = e.pageY;
+
+		// 마우스포인트 레이어 위치
+		mousePos({ psX : posX, psY : posY });
+	});
+
+	// 키보드 클릭
+	$(document).unbind().bind("keydown", function(e){
+		// Ctrl + N 눌렀을경우
+		if( e.ctrlKey && e.keyCode == 78 ){
+			if( confirm("Ctrl+N 으로 보실경우 서비스에 불편함을 느낄수 있습니다. 그래도 보시겠습니까?") ){
+				window.open(location.href);
+			}
+		}
+
+		if( !inputFocus ){
+			// 기능 레이어 숨김
+			that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+
+			// 가로뷰 좌우, home, end키 동작
+			if( that.optResult({ opt : "adjust" }) ){
+				if( e.which === 37 ){ // 좌측키
+					if( that.optResult({ opt : "course" }) === 1 ){
+						// 진행 모션
+						that.progressMotion({ course : "prev" });
+					} else {
+						// 진행 모션
+						that.progressMotion({ course : "next" });
+					}
+				} else if( e.which === 39 ){ // 우측키
+					if( that.optResult({ opt : "course" }) === 1 ){
+						// 진행 모션
+						that.progressMotion({ course : "next" });
+					} else {
+						// 진행 모션
+						that.progressMotion({ course : "prev" });
+					}
+				} else if( e.which === 36 ){ // Home키
+					// 진행 모션
+					that.progressMotion({ course : "first" });
+				} else if( e.which === 35 ) { // End키
+					// 진행 모션
+					that.progressMotion({ course : "last" });
+				}
+			} else { // 세로뷰 상하, home, end키 동작
+				if( e.which === 38 ){ // 상단키
+					// 진행 모션
+					that.progressMotion({ course : "up" });
+				} else if( e.which === 40 ){ // 하단키
+					// 진행 모션
+					that.progressMotion({ course : "down" });
+				} else if( e.which === 36 ){ // Home키
+					// 진행 모션
+					that.progressMotion({ course : "first" });
+				} else if( e.which === 35 ){ // End키
+					// 진행 모션
+					that.progressMotion({ course : "last" });
+				}
+			}
+
+			// 스페이스바 누를경우 전체 페이지로 전환
+			if( e.which === 32 ){
+				$btnFullMenu.trigger("click");
+			}
+		}
+	});
+
+	// 압축폴더 클릭
+	$titleCategory.unbind().bind("click", function(){
+		if( !$(this).parent().hasClass("title_active") ){
+			// 버튼 클래스 추가
+			$(this).parent().addClass("title_active");
+			// 레이어 노출
+			$(this.hash).stop().fadeIn();
+
+			// 기능 레이어 숨김
+			that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu, active : $titleCategory });
+		} else {
+			// 버튼 클래스 삭제
+			$(this).parent().removeClass("title_active");
+			// 레이어 숨김
+			$(this.hash).stop().fadeOut();
+		}
+	});
+
+	// 타이틀 클릭
+	$titleFolder.unbind().bind("click", function(){
+		if( !$(this).parent().hasClass("title_active") ){
+			// 버튼 클래스 추가
+			$(this).parent().addClass("title_active");
+			// 레이어 노출
+			$(this.hash).stop().fadeIn();
+
+			// 기능 레이어 숨김
+			that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu, active : $titleFolder });
+		} else {
+			// 버튼 클래스 삭제
+			$(this).parent().removeClass("title_active");
+			// 레이어 숨김
+			$(this.hash).stop().fadeOut();
+		}
+	});
+	// 제목 레이어 오버
+	$titleLayerLink.unbind("mouseenter", "mouseleave");
+	$titleLayerLink.bind("mouseenter", function(){
+		$(this).parent().addClass("active");
+	});
+	// 제목 레이어 아웃
+	$titleLayerLink.bind("mouseleave", function(){
+		$(this).parent().removeClass("active");
+	});
+
+	// 다중압축 링크 클릭
+	$titleContentLink.bind("click", function(){
+		// Index 추출
+		var index = $titleContentLink.index(this);
+
+		// 타이머 취소
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 리셋(데이터 재로드)
+		that.initReset({ url : that.dataList.contents_list[index].link });
+	});
+	// 폴더 리스트 링크 클릭
+	$titleFolderLink.bind("click", function(){
+		// Index 추출
+		var index = $titleFolderLink.index(this);
+
+		// 타이머 취소
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 리셋(데이터 재로드)
+		that.initReset({ url : that.dataList.folder_list[index].link });
+	});
+
+	// 전체보기 클릭
+	$btnFullMenu.unbind().bind("click", function(e){
+		var states;
+
+		// 이미지 사이즈 초기화
+		that.$imgWidth = null;
+		that.$imgHeight = null;
+
+		// 전체보기
+		if( !$(this).hasClass("js_fullSize") ){
+			// 버튼 클래스 추가
+			$(this).addClass("js_fullSize");
+			// 버튼 이미지 변경
+			$(this).find("img")[0].src = $(this).find("img")[0].src.replace("_off.", "_on.");
+
+			// 전체화면 변수
+			that.$popupSize = true;
+
+			states = "false";
+
+			// 이미지 가로 및 세로값 추출
+			var divisionTimer = setInterval(function(){
+				if( !that.$imgHeight ){
+					that.optResult({ opt : "size", size : that.$contentList.find(".slide_view").eq(that.optResult({ opt : "passNo" })).find("img") });
+				} else {
+					clearInterval(divisionTimer);
+
+					// 전체보기
+					that.fullSize({ state : states });
+					// 전체 이미지 리사이즈
+					that.imgAllResize();
+				}
+			}, 100);
+		} else { // 기본크기
+			// 버튼 클래스 삭제
+			$(this).removeClass("js_fullSize");
+			// 버튼 이미지 변경
+			$(this).find("img")[0].src = $(this).find("img")[0].src.replace("_on.", "_off.");
+
+			// 초기 이미지사이즈 저장
+			that.$imgWidth = that.$initImgWidth;
+			that.$imgHeight = that.$initImgHeight;
+
+			// 기본화면 변수
+			that.$popupSize = false;
+
+			states = "true";
+
+			// 전체보기
+			that.fullSize({ state : states });
+			// 전체 이미지 리사이즈
+			that.imgAllResize();
+		}
+	});
+
+	// 전체보기 ESC키 이벤트
+	document.addEventListener("fullscreenchange", evtFullEsc);
+	document.addEventListener("webkitfullscreenchange", evtFullEsc);
+	document.addEventListener("mozfullscreenchange", evtFullEsc);
+	document.addEventListener("MSFullscreenChange", evtFullEsc);
+
+	// 책갈피 클릭
+	$btnMarkMenu.unbind().bind("click", function(){
+		// 책갈피
+		that.bookmark({ node : $(this), active : that.optResult({ opt : "pageNo" }) });
+
+		// ----------------- 데이터 서버 요청(북마크) ----------------- //
+		/*
+		that.dataPost({
+			type : "bookmark",
+			idx : "<?php echo $_REQUEST["idx"];?>",
+			folder_name : that.dataList.folder_name,
+			bookmark : that.dataList.bookmark
+		});
+		*/
+		// ----------------- 데이터 서버 요청(북마크) ----------------- //
+	});
+
+	// 가로, 세로뷰 클릭
+	$btnDirectMenu.unbind().bind("click", function(){
+		// 타이머 취소
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 가로 및 세로뷰 데이터 저장
+		if( that.optResult({ opt : "adjust" }) ){
+			that.dataOverwrite({ adjust : "H" });
+		} else {
+			that.dataOverwrite({ adjust : "W" });
+		}
+
+		// 가로, 세로뷰 기능
+		that.wayView({ node : $(this), active : that.optResult({ opt : "pageNo" }) });
+		// 기능 레이어 숨김
+		that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+
+		// 시간설정
+		if( that.optResult({ opt : "auto" }) ){
+			that.autoPageTimer({ time : that.optResult({ opt : "auto" }) });
+		}
+
+		// ----------------- 데이터 서버 요청(가로 및 세로뷰) ----------------- //
+		//that.dataPost({ type : "adjust", val : that.dataList.adjust });
+		// ----------------- 데이터 서버 요청(가로 및 세로뷰) ----------------- //
+	});
+
+	// 설정 클릭
+	$btnSetupMenu.unbind().bind("click", function(){
+		if( $(this).hasClass("btn_viewerSettings_active") ){
+			// 설정 아이콘 비활성화
+			$(this).removeClass("btn_viewerSettings_active");
+			$(".setting_wrap").stop().fadeOut();
+		} else {
+			// 설정 아이콘 활성화
+			$(this).addClass("btn_viewerSettings_active");
+			$(".setting_wrap").stop().fadeIn();
+
+			// 기능 레이어 숨김
+			that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu, active : $btnSetupMenu });
+		}
+	});
+
+	// 자동넘김 설정
+	$checkAutoStart.unbind().bind("click", function(){
+		// 선택한 value값 저장
+		var index = parseFloat($(this).val());
+
+		// 타이머 취소
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		if( that.optResult({ opt : "course" }) !== index ){
+			// 자동넘김 실행
+			that.autoPassPage({ active : index });
+			// 데이터 저장(자동넘김)
+			that.dataOverwrite({ auto_pass : index });
+
+			// ----------------- 데이터 서버 요청(자동넘김) ----------------- //
+			//that.dataPost({ type : "auto_pass", val : that.dataList.auto_pass });
+			// ----------------- 데이터 서버 요청(자동넘김) ----------------- //
+		}
+	});
+
+	// 페이지 넘김 순서
+	$checkPageOrder.unbind().bind("click", function(){
+		// Index 추출
+		var index = $checkPageOrder.index(this);
+
+		if( that.optResult({ opt : "course" }) !== index+1 ){
+			// 타이머 취소
+			if( that.$timer ){
+				clearInterval(that.$timer);
+			}
+
+			// 데이터 저장(페이지 넘김순서)
+			that.dataOverwrite({ pass_way : index+1 });
+			// 페이지 넘김순서
+			that.pageWayView({ active : index+1 });
+
+			// 슬라이드 페이징
+			sliderForm(that.optResult({ opt : "length" }));
+
+			// 페이징
+			that.pageCountArea({ active : ( that.optResult({ opt : "division" }) == 1 ) ? that.optResult({ opt : "pageNo" }) : that.optResult({ opt : "pageNo" })/2 });
+
+			// 시간설정
+			if( that.optResult({ opt : "auto" }) ){
+				that.autoPageTimer({ time : that.optResult({ opt : "auto" }) });
+			}
+
+			// ----------------- 데이터 서버 요청(넘김순서) ----------------- //
+			//that.dataPost({ type : "pass_way", val : that.dataList.pass_way });
+			// ----------------- 데이터 서버 요청(넘김순서) ----------------- //
+		}
+
+		//$btnSetupMenu.trigger("click");
+	});
+
+	// 페이지 이미지 노출 갯수
+	$checkViewCount.unbind().bind("click", function(){
+		// Index 추출
+		var index = $checkViewCount.index(this);
+
+		if( that.optResult({ opt : "division" }) !== index+1 ){
+			// 자동넘김 초기화
+			if( that.$timer ){
+				clearInterval(that.$timer);
+			}
+
+			// 데이터 저장(1,2장보기)
+			that.dataOverwrite({ pass_division : index+1 });
+
+			// 1, 2장보기
+			that.divisionView({ active : index+1 });
+
+			// 슬라이드 페이징
+			sliderForm( that.optResult({ opt : "length" }) );
+
+			// 페이징
+			that.pageCountArea({ active : ( that.optResult({ opt : "division" }) === 1 ) ? that.optResult({ opt : "pageNo" }) : that.optResult({ opt : "pageNo" })/2 });
+
+			// 시간설정
+			if( that.optResult({ opt : "auto" }) ){
+				that.autoPageTimer({ time : that.optResult({ opt : "auto" }) });
+			}
+
+			// ----------------- 데이터 서버 요청(1 또는 2장 보기) ----------------- //
+			//that.dataPost({ type : "pass_division", val : that.dataList.pass_division });
+			// ----------------- 데이터 서버 요청(1 또는 2장 보기) ----------------- //
+		}
+	});
+
+	// 배경색 설정
+	$btnBackColor.unbind().bind("click", function(){
+		// Index 추출
+		var index = $btnBackColor.index(this)
+		, colorInit = $(this).parent().attr("class").slice(4, 5).toUpperCase();
+
+		if( that.dataList.background !== colorInit ){
+			// 자동넘김 초기화
+			if( that.$timer ){
+				clearInterval(that.$timer);
+			}
+
+			// 배경색 설정
+			that.backColor({ indexs : index, active : colorInit });
+			// 데이터 저장(배경색)
+			that.dataOverwrite({ background : colorInit });
+
+			// 시간설정
+			if( that.optResult({ opt : "auto" }) ){
+				that.autoPageTimer({ time : that.optResult({ opt : "auto" }) }); // 시간설정
+			}
+
+			// ----------------- 데이터 서버 요청(1 또는 2장 보기) ----------------- //
+			//that.dataPost({ type : "background", val : that.dataList.background });
+			// ----------------- 데이터 서버 요청(1 또는 2장 보기) ----------------- //
+		}
+	});
+
+	// 이전화
+	$btnPrev.unbind().bind("click", function(){
+		// 자동넘김 초기화
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 이전, 다음 메세지 출력
+		that.layerAlertMsg({ result : "prev" });
+
+		// 기능 레이어 숨김
+		that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+	});
+	// 다음화
+	$btnNext.unbind().bind("click", function(){
+		// 자동넘김 초기화
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 이전, 다음 메세지 출력
+		that.layerAlertMsg({ result : "next" });
+
+		// 기능 레이어 숨김
+		that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+	});
+
+	// 입력 input focusin
+	$inputRange.unbind().bind("focusin", function(e){
+		// Input Value
+		inputValue = $(this).val();
+
+		// Input Value 리셋
+		$(this).val(" ");
+
+		// Input Focus
+		inputFocus = true;
+	});
+	// 입력 input focusout
+	$inputRange.bind("focusout", function(){
+		if( $(this).val() == " " ){
+			$(this).val(inputValue);
+		}
+
+		inputFocus = false;
+	});
+	// 입력 input change
+	$inputRange.bind("change", function(e){
+		// 자동넘김 설정 초기화
+		if( that.$timer ){
+			clearInterval(that.$timer);
+		}
+
+		// 입력값 체크
+		if( $(this).val() > 0 && $(this).val() < (( that.optResult({ opt : "division" }) === 1 ) ? that.optResult({ opt : "length" }) : that.optResult({ opt : "length" })*2) ){
+			slider.slider( "value", $(this).val() );
+
+			optLength = that.optResult({ opt : "length" });
+
+			if( that.optResult({ opt : "adjust" }) ){
+				that.progressMotion({ course : ( that.optResult({ opt : "division" }) === 1 ) ? $(this).val()-1 : Math.floor(($(this).val()-1)/2) });
+			} else {
+				that.funcVerticalAction({ node : that.$content.find(".content_wrap_in"), opt : ( that.optResult({ opt : "division" }) === 1 ) ? $(this).val()-1 : Math.floor(($(this).val()-1)/2) });
+			}
+		} else {
+			alert("잘못된 값입니다. 1~" + that.optResult({ opt : "length" }) + "의 값을 입력해주세요.");
+
+			$inputRange.val(that.optResult({ opt : "pageNo" })+1);
+		}
+
+		// 기능 레이어 숨김
+		that.layerToggle({ tMenu : $titleCategory, fMenu : $titleFolder, sMenu : $btnSetupMenu });
+
+		// 시간설정
+		if( that.optResult({ opt : "auto" }) ){
+			that.autoPageTimer({ time : that.optResult({ opt : "auto" }) });
+		}
+
+		// 아이콘 포커스아웃
+		$(this).blur();
+	});
+
+	// 슬라이드 페이징
+	sliderForm();
+
+	// full 스크린
+	$(window).unbind().resize(function(){
+		that.$imgWidth = null;
+		that.$imgHeight = null;
+
+		// 이미지 사이즈 추출
+		var divisionTimer = setInterval(function(){
+			if( !that.$imgHeight ){
+				that.optResult({ opt : "size", size : that.$contentList.eq(( that.optResult({ opt : "division" }) === 1 ) ? that.optResult({ opt : "pageNo" }) : Math.floor(that.optResult({ opt : "pageNo" })/2)).find(".slide_view img") });
+			} else {
+				clearInterval(divisionTimer);
+
+				// 전체 이미지 리사이즈
+				that.imgAllResize();
+			}
+		}, 50);
+	});
+
+	// 슬라이드 페이징 함수
+	function sliderForm(){
+		// Jquery UI 슬라이더
+		slider = $("#slider-range-min").slider({
+			range : ( that.optResult({ opt : "course" }) === 1 ) ? "min" : "max",
+			value : 1,
+			min : 1,
+			max : that.optResult({ opt : "length" }),
+			value : $inputRange.attr("data-value"),
+			slide : function( event, ui ) {
+				// 정방향과 역방향 현재값 추출
+				var uiValue = ( that.optResult({ opt : "course" }) === 1 ) ? ui.value : that.optResult({ opt : "length" }) - (ui.value-1);
+
+				// Input에 들어갈 Value 값
+				$inputRange.val( uiValue );
+
+				// 가로뷰
+				if( that.optResult({ opt : "adjust" }) ){
+					that.progressMotion({ course : uiValue-1 });
+				} else { // 세로뷰
+					that.progressMotion({ node : that.$content.find(".content_wrap_in"), course : uiValue-1 });
+				}
+
+				// 슬라이더 아이콘 포커스 아웃
+				$(".ui-slider-handle").blur();
+			}
+		});
+	}
+
+	// 컨텐츠 마우스 좌표 위치
+	function mousePos(op){
+		var posX = op.psX
+		, posY = op.psY;
+
+		// 레이어 활성화
+		$stateLayer.css({ left : posX - 20, top : posY + 30 }).show();
+
+		// 가로뷰
+		if( that.optResult({ opt : "adjust" }) ){
+			if( posX < Math.floor( $(window).width()/3 ) ){ // 좌측영역
+				// 정방향 또는 역방향 버튼 위치 변경
+				if( that.optResult({ opt : "course" }) === 1 ){
+					$stateLayer.text("이전").show();
+				} else {
+					$stateLayer.text("다음").show();
+				}
+			} else if( posX >= Math.floor( $(window).width()/3 ) && posX < Math.floor( $(window).width()/3 )*2 ) { // 중앙
+				$stateLayer.text("메뉴");
+			} else { // 우측영역
+				// 정방향 또는 역방향 버튼 위치 변경
+				if( that.optResult({ opt : "course" }) === 1 ){
+					$stateLayer.text("다음").show();
+				} else {
+					$stateLayer.text("이전").show();
+				}
+			}
+		} else { // 세로뷰
+			$stateLayer.text("메뉴");
+		}
+	}
+
+	// 전체보기 ESC키 인식 이벤트
+	function evtFullEsc(){
+		// 엣지 및 크롬
+		if( document.webkitIsFullScreen == false ){
+			if( $btnFullMenu.hasClass("js_fullSize") ){
+				$btnFullMenu.trigger("click");
+			}
+		}
+		// 파이어폭스
+		if( document.mozFullScreen == false ){
+			if( $btnFullMenu.hasClass("js_fullSize") ){
+				$btnFullMenu.trigger("click");
+			}
+		}
+		// 익스 하위버전
+		if( document.msFullscreenEnabled == true ){
+			if( document.msFullscreenElement == null ){
+				if( $btnFullMenu.hasClass("js_fullSize") ){
+					$btnFullMenu.trigger("click");
+				}
+			}
 		}
 	}
 }
