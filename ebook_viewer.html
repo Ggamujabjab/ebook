@@ -807,6 +807,18 @@ Viewer.prototype.createImgLoad = function(op){
 
 						// 가로 및 세로뷰
 						that.wayView({ node : that.$head.find(".btn_landscapeView") });
+
+						// 자동넘김 설정
+						that.autoPassPage();
+
+						// 페이지 넘김 순서
+						that.pageWayView();
+
+						// 페이지 1~2장보기
+						that.divisionView();
+
+						// 배경색 설정
+						that.backColor();
 					}
 				}, 50)
 
@@ -1881,6 +1893,252 @@ Viewer.prototype.progressMotion = function(op){
 
 	// 데이터 병합
 	this.dataOverwrite({ page_no : pageNum });
+}
+// 자동넘김
+Viewer.prototype.autoPassPage = function(op){
+	var pageNum = ( op && op.active ) ? op.active : this.dataList.auto_pass
+	, $autoInput = this.$head.find(".js_auto_input .input-radio");
+
+	// 선택한 Input 활성화
+	for( var i=0, max=$autoInput.length; i<max; i++ ){
+		if( $autoInput.eq(i).val() === pageNum ){
+			$autoInput.eq(i).attr({ checked : true });
+		}
+	}
+
+	// 자동넘김 시간타이머
+	this.autoPageTimer({ time : pageNum });
+}
+// 페이지 넘김(기본, 역순)
+Viewer.prototype.pageWayView = function(op){
+	var way = ( op && op.active ) ? op.active : this.optResult({ opt : "course" })
+	, listCount = this.optResult({ opt : "total" })
+	, listCountLength = listCount.length
+	, $orderInput = this.$head.find(".js_order_input input");
+
+	// 초기
+	if( !op ){
+		$orderInput.eq(way-1).attr({ checked : true });
+	} else { // 페이지 넘김 버튼 클릭
+		// 이미지 세로형
+		if( this.dataList.imgForm == "vertical" ){
+			// 한장보기
+			if( this.optResult({ opt : "division" }) === 1 ){
+				for( var i=0; i<listCountLength; i++ ){
+					if( i%2 === 0 ){
+						if( listCount.eq(i+1).length ){
+							listCount.eq(i).find("span").appendTo( listCount.eq(i+1) );
+						}
+					} else {
+						if( listCount.eq(i-1).length ){
+							listCount.eq(i).find("span").eq(0).appendTo( listCount.eq(i-1) );
+						}
+					}
+				}
+			} else { // 두장보기
+				for( var i=0; i<listCountLength; i++ ){
+					if( way === 1 ){
+						listCount.eq(i).find("span").eq(0).before( listCount.eq(i).find("span").eq(1) );
+					} else {
+						listCount.eq(i).find("span").eq(1).after( listCount.eq(i).find("span").eq(0) );
+					}
+				}
+			}
+		} else { // 이미지 가로형
+			// 한장보기
+			if( this.optResult({ opt : "division" }) === 1 ){
+				for( var i=0; i<listCountLength; i++ ){
+					if( way === 1 ){
+						if( i%2 === 0 ){
+							listCount.eq(i+1).after( listCount.eq(i) );
+						}
+					} else {
+						if( i%2 !== 0 ){
+							listCount.eq(i).after( listCount.eq(i-1) );
+						}
+					}
+				}
+			}
+		}
+	}
+}
+// 1장, 2장보기 결과값 추출
+Viewer.prototype.divisionView = function(op){
+	var that = this
+	, division = ( op && op.active ) ? op.active : this.optResult({ opt : "division" })
+	, listCount = this.optResult({ opt : "total" })
+	, listCountLength = listCount.length
+	, $scrollWrap = this.$content.find(".content_wrap_in")
+	, $autoInput = this.$head.find(".js_view_input input");
+
+	// 초기 실행
+	if( !op ){
+		$autoInput.eq(division-1).attr({ checked : true });
+	} else {
+		// 페이징 내용 삭제
+		this.$paging.html("");
+		// 북마크 아이콘
+		if( this.$bookmark.css("display") != "none" ){
+			this.$bookmark.appendTo( this.$container );
+		}
+
+		// 한장보기
+		if( division === 1 ){
+			// 정방향
+			if( this.optResult({ opt : "course" }) === 1 ){
+				for( var i=0; i<this.optResult({ opt : "length" }); i++ ){
+					// 이미지 세로형
+					if( this.dataList.imgForm === "vertical" ){
+						if( i < Math.floor(this.optResult({ opt : "length" })/2) ){
+							var slides = $("<div />").addClass("slide").appendTo( this.$content.find(".content_wrap_in") );
+
+							listCount.eq(i).find("span").eq(1).appendTo( slides );
+							listCount.eq(i).after( slides );
+						}
+					} else {
+						if( i < this.optResult({ opt : "length" }) ){
+							var slides = $("<div />").addClass("slide").appendTo( this.$content.find(".content_wrap_in") );
+
+							listCount.eq(i).find("span").eq(1).appendTo( slides );
+							listCount.eq(i).after( slides );
+						}
+					}
+				}
+			} else {
+				for( var i=0; i<this.optResult({ opt : "length" }); i++ ){
+					if( this.dataList.imgForm == "vertical" ){
+						if( i < Math.floor(this.optResult({ opt : "length" })/2) ){
+							var slides = $("<div />").addClass("slide").appendTo( this.$content.find(".content_wrap_in") );
+
+							listCount.eq(i).find("span").eq(0).appendTo( slides );
+							listCount.eq(i).after( slides );
+						}
+					} else {
+						if( i < this.optResult({ opt : "length" }) ){
+							var slides = $("<div />").addClass("slide").appendTo( this.$content.find(".content_wrap_in") );
+
+							listCount.eq(i).find("span").eq(0).appendTo( slides );
+							listCount.eq(i).after( slides );
+						}
+					}
+				}
+			}
+
+			// 리스트
+			this.$contentList = this.$container.find(".slide");
+			// 클래스 삭제
+			this.$contentList.removeClass("slide_double");
+			this.$contentList.removeClass("slide_full_double");
+
+			// 전체 이미지 리사이즈
+			this.imgAllResize();
+
+			// 책갈피 아이콘 위치
+			if( this.optResult({ opt : "bookmark" }) ){
+				this.$contentList.eq(this.optResult({ opt : "bookmark" })).append( this.$bookmark );
+			} else {
+				this.$contentList.eq(this.optResult({ opt : "pageNo" })).append( this.$bookmark );
+			}
+		} else { // 2장보기
+			for( var i=0; i<listCountLength; i++ ){
+				if( i%2 != 0 ){
+					listCount.eq(i-1).append( listCount.eq(i).find(".slide_view") );
+					listCount.eq(i).remove();
+				}
+			}
+
+			// 리스트
+			this.$contentList = this.$container.find(".slide");
+			// 클래스 추가
+			this.$contentList.addClass("slide_double");
+
+			// 전체 이미지 리사이즈
+			this.imgAllResize();
+
+			// 책갈피 아이콘 위치
+			if( this.optResult({ opt : "bookmark" }) ){
+				this.$contentList.eq(Math.floor(this.optResult({ opt : "bookmark" })/2)).append( this.$bookmark );
+			} else {
+				this.$contentList.eq(Math.floor(this.optResult({ opt : "pageNo" })/2)).append( this.$bookmark );
+			}
+		}
+
+		// 가로, 세로뷰
+		if( this.optResult({ opt : "adjust" }) ){
+			this.progressMotion();
+		} else {
+			this.progressMotion({ node : this.$content.find(".content_wrap_in") });
+		}
+	}
+}
+// 배경색 설정
+Viewer.prototype.backColor = function(op){
+	var $button = $(".js_bgcolor_selc").find("img")
+	, btnIndex = ( op && op.indexs ) ? op.indexs : 0
+	, pageNum = ( op && op.active ) ? op.active : this.optResult({ opt : "back" });
+
+	// 초기
+	if( !op ){
+		// 흰색
+		if( pageNum === "W" ){
+			// 컨텐츠 클래스추가(흰색)
+			this.$container.addClass("view_backbg_white");
+			// 아이콘 활성화
+			$button[0].src = $button[0].src.replace("_off.gif", "_on.gif");
+		} else if( pageNum === "G" ) { // 회색
+			// 컨텐츠 클래스추가(회색)
+			this.$container.addClass("view_backbg_gray");
+			// 아이콘 활성화
+			$button[1].src = $button[1].src.replace("_off.gif", "_on.gif");
+		} else if( pageNum === "B" ) { // 검정
+			// 컨텐츠 클래스추가(검정)
+			this.$container.addClass("view_backbg_black");
+			// 아이콘 활성화
+			$button[2].src = $button[2].src.replace("_off.gif", "_on.gif");
+		} else { // 흰색
+			// 컨텐츠 클래스추가(흰색)
+			this.$container.addClass("view_backbg_white");
+			// 아이콘 활성화
+			$button[0].src = $button[0].src.replace("_off.gif", "_on.gif");
+		}
+	} else { // 버튼 선택
+		if( pageNum === "W" ){
+			// 컨텐츠 클래스삭제
+			this.$container.removeClass("view_backbg_gray");
+			this.$container.removeClass("view_backbg_black");
+
+			// 컨텐츠 클래스추가(흰색)
+			this.$container.addClass("view_backbg_white");
+		} else if( pageNum === "G" ) {
+			// 컨텐츠 클래스삭제
+			this.$container.removeClass("view_backbg_white");
+			this.$container.removeClass("view_backbg_black");
+
+			// 컨텐츠 클래스추가(회색)
+			this.$container.addClass("view_backbg_gray");
+		} else if( pageNum === "B" ) {
+			// 컨텐츠 클래스삭제
+			this.$container.removeClass("view_backbg_white");
+			this.$container.removeClass("view_backbg_gray");
+
+			// 컨텐츠 클래스추가(검정)
+			this.$container.addClass("view_backbg_black");
+		} else {
+			// 컨텐츠 클래스삭제
+			this.$container.removeClass("view_backbg_gray");
+			this.$container.removeClass("view_backbg_black");
+
+			// 컨텐츠 클래스추가(흰색)
+			this.$container.addClass("view_backbg_white");
+		}
+
+		// 배경색설정 버튼 비활성화
+		$button.each(function(){
+			$(this)[0].src = $(this)[0].src.replace("_on.gif", "_off.gif");
+		});
+		// 배경색설정 선택 버튼 활성화
+		$button[btnIndex].src = $button[btnIndex].src.replace("_off.gif", "_on.gif")
+	}
 }
 // 로딩바
 Viewer.prototype.loadingBar = function(op){
