@@ -819,6 +819,9 @@ Viewer.prototype.createImgLoad = function(op){
 
 						// 배경색 설정
 						that.backColor();
+
+						// 전체 이미지 사이즈 지정
+						that.imgAllResize({ order : "init" });
 					}
 				}, 50)
 
@@ -2190,6 +2193,141 @@ Viewer.prototype.layerToggle = function(op){
 
 		// 레이어 비활성화
 		$($($targer).attr("href")).fadeOut();
+	}
+}
+// 이미지 전체 리사이즈
+Viewer.prototype.imgAllResize = function(op){
+	var that = this
+	, order = ( op && op.order ) ? op.order : null
+	, $viewImg = this.$contentList.find("span img");
+
+	// 이미지 세로형
+	if( this.dataList.imgForm === "vertical" ){
+		// 한장보기
+		if( that.optResult({ opt : "division" }) === 1 ){
+			for( var i=0, max=$viewImg.length; i<max; i++ ){
+				if( $viewImg.eq(i).outerWidth() >= $(window).width() ){
+					$viewImg.eq(i).css({ width : "100%", height : "auto" });
+
+					if( $viewImg.eq(i).outerHeight() > $(window).height() ){
+						$viewImg.eq(i).css({ width : "auto", height : "100%" });
+					}
+				} else {
+					$viewImg.eq(i).css({ width : "auto", height : "100%" });
+				}
+			}
+		} else { // 두장보기
+			// 전체보기
+			if( this.$popupSize ){
+				this.$contentList.removeClass("slide_double");
+				this.$contentList.addClass("slide_full_double");
+			} else { // 기본형
+				this.$contentList.removeClass("slide_full_double");
+				this.$contentList.addClass("slide_double");
+			}
+
+			// 전체 이미지 리사이즈
+			for( var i=0, max=$viewImg.length; i<max; i++ ){
+				$viewImg.eq(i).css({ width : "100%", height : "auto" });
+
+				if( $viewImg.eq(i).outerHeight() > $(window).height() ){
+					$viewImg.eq(i).css({ width : "auto", height : "100%" });
+				}
+			}
+		}
+	} else { // 이미지 가로형
+		if( that.optResult({ opt : "division" }) === 1 ){
+			// 리스트 Div 가로값
+			this.$contentList.css({ width : "auto" });
+
+			// 초기 실행
+			if( order && order === "init" ){
+				this.$contentList.find("span").css({ width : Math.ceil(this.$imgWidth*($(window).height()/this.$imgHeight))/2 })
+			} else { // 선택 실행
+				for( var i=0, max=$viewImg.length; i<max; i++ ){
+					$viewImg.eq(i).parent().css({ width : Math.ceil(this.$imgWidth*($(window).height()/this.$imgHeight))/2 })
+				}
+			}
+		} else {
+			for( var i=0, max=$viewImg.length; i<max; i++ ){
+				// 가로뷰
+				if( this.optResult({ opt : "adjust" }) ){
+					$viewImg.eq(i).parent().css({ width : Math.ceil(this.$imgWidth*($(window).height()/this.$imgHeight))/2 });
+
+					if( $viewImg.eq(i).parent().outerWidth() > $(window).width()/2 ){
+						$viewImg.eq(i).parent().css({ width : $(window).width()/2 });
+					}
+				} else { // 세로뷰
+					$viewImg.eq(i).parent().css({ width : (Math.ceil(this.$imgWidth*($(window).height()/this.$imgHeight))/2) - 9 });
+
+					if( $viewImg.eq(i).parent().outerWidth() > $(window).width()/2 ){
+						$viewImg.eq(i).parent().css({ width : ($(window).width()/2)-9 });
+					}
+				}
+			}
+		}
+	}
+}
+// 개별 리사이즈
+Viewer.prototype.imgPieceResize = function(op){
+	var that = this
+	, $img = op.img;
+
+	// 이미지 세로형
+	if( this.dataList.imgForm === "vertical" ){
+		setTimeout(function(){
+			if( that.optResult({ opt : "division" }) === 1 ){
+				if( $img.outerWidth() > $img.outerHeight() ){
+					$img.css({ width : "100%", height : "auto" });
+
+					if( $img.outerHeight() > $(window).height() ){
+						$img.css({ width : "auto", height : "100%" });
+					}
+				} else {
+					$img.css({ width : "auto", height : "100%" });
+				}
+			} else {
+				var nextNum = 0;
+
+				// 방향에 따라 넘버값 변경
+				if( that.$course === "next" ){
+					if( that.optResult({ opt : "pageNo" })%2 != 0 ){
+						nextNum = that.optResult({ opt : "pageNo" })+1;
+					} else {
+						nextNum = that.optResult({ opt : "pageNo" })+2;
+					}
+				} else {
+					if( that.optResult({ opt : "pageNo" })%2 != 0 ){
+						nextNum = that.optResult({ opt : "pageNo" })-1;
+					} else {
+						nextNum = that.optResult({ opt : "pageNo" })-2;
+					}
+				}
+
+				for( var i=nextNum; i<=nextNum+1; i++ ){
+					that.$contentList.find("span").eq(i).find("img").css({ width : "auto", height : "100%" });
+
+					// 가로형 이미지일경우
+					if( that.$contentList.find("span").eq(i).find("img").outerWidth() > that.$contentList.find("span").eq(i).outerWidth() ){
+						that.$contentList.find("span").eq(i).find("img").css({ width : "100%", height : "auto" });
+					}
+				}
+			}
+		}, 50);
+	} else { // 이미지 가로형
+		setTimeout(function(){
+			$img.parent().css({ width : Math.ceil($img.outerWidth()*($(window).height()/$img.outerHeight()))/2 });
+
+			if( that.optResult({ opt : "division" }) === 2 ){
+				if( $img.parent().outerWidth() > $(window).width()/2 ){
+					if( !that.optResult({ opt : "adjust" }) ){
+						$img.parent().css({ width : ($(window).width()/2) - 9 });
+					} else {
+						$img.parent().css({ width : $(window).width()/2 });
+					}
+				}
+			}
+		});
 	}
 }
 // 로딩바
