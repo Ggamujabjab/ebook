@@ -2140,6 +2140,58 @@ Viewer.prototype.backColor = function(op){
 		$button[btnIndex].src = $button[btnIndex].src.replace("_off.gif", "_on.gif")
 	}
 }
+// 기능(컨트럴바) 레이어 활성화 여부
+Viewer.prototype.controllToggle = function(flag){
+	if( flag ){
+		this.$head.parent().stop().animate({ top : 0 }, 400);
+		this.$menu.stop().animate({ bottom : 0 }, 400);
+	} else {
+		this.$head.parent().stop().animate({ top : -this.$head.parent().outerHeight() }, 400);
+		this.$menu.stop().animate({ bottom : -this.$menu.outerHeight() }, 400);
+	}
+}
+// 제목 및 뷰어 레이어 활성화 여부
+Viewer.prototype.layerToggle = function(op){
+	var $tMenu = op.tMenu
+	, $fMenu = op.fMenu
+	, $sMenu = op.sMenu
+	, $active = op.active;
+
+	// 부분 비활성화
+	if( $active ){
+		if( $tMenu == $active ){
+			titleDisable({ btnTarget : $fMenu });
+			titleDisable({ btnTarget : $sMenu });
+		} else if( $fMenu == $active ){
+			titleDisable({ btnTarget : $tMenu });
+			titleDisable({ btnTarget : $sMenu });
+		} else {
+			titleDisable({ btnTarget : $tMenu });
+			titleDisable({ btnTarget : $fMenu });
+		}
+	} else { // 전체 비활성화
+		titleDisable({ btnTarget : $tMenu });
+		titleDisable({ btnTarget : $fMenu });
+		titleDisable({ btnTarget : $sMenu });
+	}
+
+	// 타이틀 활성화 여부
+	function titleDisable(op){
+		var $targer = op.btnTarget;
+
+		// 타이틀 및 설정
+		if( $($targer).parent().hasClass("title") ){
+			if( $($targer).parent().hasClass("title_active") ){
+				$($targer).parent().removeClass("title_active");
+			}
+		} else {
+			$($targer).removeClass("btn_viewerSettings_active");
+		}
+
+		// 레이어 비활성화
+		$($($targer).attr("href")).fadeOut();
+	}
+}
 // 로딩바
 Viewer.prototype.loadingBar = function(op){
 	var $loading = $("#loading")
