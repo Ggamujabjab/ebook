@@ -801,6 +801,9 @@ Viewer.prototype.createImgLoad = function(op){
 
 						// 상단 메뉴 이벤트
 						that.menuCreateEvent();
+
+						// 책갈피
+						that.bookmark({ node : that.$head.find(".btn_bookmark") });
 					}
 				}, 50)
 
@@ -1532,6 +1535,128 @@ Viewer.prototype.menuCreateEvent = function(){
 					$btnFullMenu.trigger("click");
 				}
 			}
+		}
+	}
+}
+// 전체 및 현재사이즈
+Viewer.prototype.fullSize = function(op){
+	var that = this
+	, $btnFullMenu = this.$head.find(".btn_full") // full 버튼
+	, agent = navigator.userAgent.toLowerCase()
+	, fullResize = null;
+
+	// 전체화면
+	if( op.state == "false" ){
+		// Supports most browsers and their versions.
+		var requestMethod = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen || document.documentElement.mozRequestFullscreen || document.documentElement.msRequestFullscreen;
+		// Native full screen.
+		if (requestMethod) {
+			requestMethod.call(document.documentElement);
+		}
+
+		// 익스
+		if( agent.indexOf("msie") != -1 ){
+			var addWidth = screen.availWidth - $("body").width()
+			, addHeight = screen.availHeight - $("body").height();
+
+			// 익스에서 팝업의 위치가 움직이는 에러 수정
+			window.moveTo(0, 0);
+			window.resizeBy(addWidth, addHeight);
+
+			// 세로뷰 이미지 위치
+			if( ($(window).width()+16) == screen.width && this.optResult({ opt : "adjust" }) == "H" ){
+				that.$content.find(".content_wrap_in").scrollTop($(window).height() * (( this.optResult({ opt : "division" }) == 1 ) ? this.optResult({ opt : "pageNo" }) : Math.floor(this.optResult({ opt : "pageNo" })/2)));
+			}
+		} else { // 그외
+			// 세로뷰 이미지 위치
+			if( $(window).width() == screen.width && this.optResult({ opt : "adjust" }) == "H" ){
+				that.$content.find(".content_wrap_in").scrollTop($(window).height() * (( this.optResult({ opt : "division" }) == 1 ) ? this.optResult({ opt : "pageNo" }) : Math.floor(this.optResult({ opt : "pageNo" })/2)));
+			}
+		}
+	} else { // 기본
+		if( agent.indexOf("msie") != -1 ){
+			window.moveTo(0, 0);
+			window.resizeTo(that.$screenWidth+17, that.$screenHeight+70);
+		}
+
+		// 원복
+		if (document.cancelFullScreen) {
+			document.cancelFullScreen();
+		} else if (document.mozCancelFullScreen) {
+			document.mozCancelFullScreen();
+		} else if (document.webkitCancelFullScreen) {
+			document.webkitCancelFullScreen();
+		} else {
+			document.msExitFullscreen();
+		}
+	}
+}
+// 북마크( node, data )
+Viewer.prototype.bookmark = function(op){
+	var active = ( op && op.active >= 0 ) ? op.active : null
+	, listCount = this.optResult({ opt : "total" });
+
+	// 초기 실행
+	if( !active ){
+		if( this.optResult({ opt : "bookmark" }) > 0 ){
+			var currentPageNum = this.optResult({ opt : "bookmark" });
+
+			// 북마크아이콘 이미지 활성화
+			op.node.find("img")[0].src = op.node.find("img")[0].src.replace("_off", "_on");
+			// 북마크아이콘 위치값으로 이동
+			listCount.eq(currentPageNum).append( this.$bookmark );
+			// 북마크아이콘 활성화
+			this.$bookmark.show();
+
+			// 가로 및 세로형
+			if( this.optResult({ opt : "adjust" }) ){
+				this.progressMotion({ course : currentPageNum });
+			} else {
+				this.progressMotion({ node : this.$content.find(".content_wrap_in"), course : currentPageNum });
+			}
+
+			// 페이징
+			this.pageCountArea({ active : currentPageNum });
+		} else {
+			// 가로 및 세로형
+			if( this.optResult({ opt : "adjust" }) ){
+				this.progressMotion({ course : this.optResult({ opt : "pageNo" }) });
+			} else {
+				this.progressMotion({ node : this.$content.find(".content_wrap_in"), course : currentPageNum });
+			}
+
+			// 페이징
+			this.pageCountArea({ active : this.optResult({ opt : "pageNo" }) });
+		}
+	} else { // 메뉴 클릭 실행
+		// 북마크값과 현재 선택한값이 다를경우
+		if( this.optResult({ opt : "bookmark" }) != active ){
+			// 북마크아이콘 이미지 활성화
+			op.node.find("img")[0].src = op.node.find("img")[0].src.replace("_off", "_on");
+
+			// 북마크아이콘 위치값으로 이동
+			if( this.optResult({ opt : "division" }) == 1 ){ // 한장보기
+				listCount.eq(active).append( this.$bookmark );
+			} else { // 2장보기
+				listCount.eq(Math.floor(active/2)).append( this.$bookmark );
+			}
+
+			// 북마크아이콘 활성화
+			this.$bookmark.show();
+
+			// 데이터 병합
+			this.dataOverwrite({ bookmark : active });
+		} else { // 북마크값과 현재 선택한값이 같을경우
+			// 북마크아이콘 비활성화
+			op.node.find("img")[0].src = op.node.find("img")[0].src.replace("_on", "_off");
+			// 북마크아이콘 위치값으로 이동
+			this.$container.append( this.$bookmark );
+
+			// 북마크아이콘 숨김
+			this.$bookmark.hide();
+
+			// 데이터 병합
+			this.dataOverwrite({ bookmark : "" });
 		}
 	}
 }
