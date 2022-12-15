@@ -2149,6 +2149,52 @@ Viewer.prototype.backColor = function(op){
 		$button[btnIndex].src = $button[btnIndex].src.replace("_off.gif", "_on.gif")
 	}
 }
+// 하단 현재 페이지 노출(아이콘)
+Viewer.prototype.pageCountArea = function(op){
+	var pageNum = ( op && op.active ) ? op.active : 0
+	, $pageInput = this.$menu.find(".input-range")
+	, $pageTotal = this.$menu.find(".input_paging")
+	, $sliderParent = this.$menu.find(".ui-slider-track")
+	, $sliderBg = $sliderParent.find(".ui-slider-range")
+	, $sliderIcon = $sliderParent.find(".ui-slider-handle")
+	, actionValue = null; // 리스트 카운팅 퍼센트
+
+	// Input Page 카운팅
+	if( this.optResult({ opt : "division" }) === 1 ){
+		actionValue = Math.floor((pageNum * 100) / (this.optResult({ opt : "length" })-1));
+
+		$pageInput.attr("data-value", pageNum+1).val(pageNum+1);
+	} else {
+		// 최종파일 갯수의 짝수 및 홀수 체크
+		if( this.$length%2 === 0 ){
+			actionValue = Math.floor((pageNum * 100) / (this.optResult({ opt : "length" })-1));
+		} else {
+			actionValue = Math.floor((pageNum * 100) / this.optResult({ opt : "length" }));
+		}
+
+		// Input 현재페이지 출력
+		if( pageNum === this.optResult({ opt : "length" }) && this.$contentList.eq(pageNum).find("span").length === 1 ){
+			$pageInput.attr("data-value", pageNum+1).val( ((pageNum+1)*2)-1 );
+		} else { // 그외
+			if( this.optResult({ opt : "course" }) === 1 ){
+				$pageInput.attr("data-value", pageNum+1).val( ((pageNum+1)*2)-1 + "-" + (pageNum+1)*2 );
+			} else {
+				$pageInput.attr("data-value", pageNum+1).val( ((pageNum+1)*2) + "-" + (((pageNum+1)*2)-1) );
+			}
+		}
+	}
+
+	// 현재페이지 옆에 최종이미지 갯수
+	$pageTotal.text(( this.dataList.imgForm === "vertical" ) ? "/" + this.$length : "/" + this.$length*2 );
+	// 하단 스크롤바 배경
+	$sliderBg.css({ width : actionValue + "%" });
+	// 넘김순서 스크롤바 위치
+	if( this.optResult({ opt : "course" }) === 1 ){
+		$sliderIcon.css({ left : actionValue + "%", right : "auto" });
+	} else {
+		$sliderIcon.css({ left : "auto", right : (actionValue-2) + "%" });
+	}
+}
 // 기능(컨트럴바) 레이어 활성화 여부
 Viewer.prototype.controllToggle = function(flag){
 	if( flag ){
